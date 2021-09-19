@@ -282,6 +282,11 @@ AC_DEFUN([CONFIGURE_OPENSSL], [
 		CRYPTO_STATIC_LIBS=$OPENSSL_STATIC_LIBS
 		PKG_CONFIG=$saved_PKG_CONFIG
 	fi
+
+	saved_LIBS=$LIBS
+	AC_CHECK_DECLS([CRYPTO_THREAD_enabled], [], [], [#include <openssl/crypto.h>])
+	AC_CHECK_DECLS([OSSL_KDF_PARAM_ARGON2_VERSION], [], [], [#include <openssl/core_names.h>])
+	LIBS=$saved_LIBS
 ])
 
 AC_DEFUN([CONFIGURE_NSS], [

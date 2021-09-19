@@ -42,6 +42,12 @@ static OSSL_PROVIDER *ossl_legacy = NULL;
 static OSSL_PROVIDER *ossl_default = NULL;
 static OSSL_LIB_CTX  *ossl_ctx = NULL;
 static char backend_version[256] = "OpenSSL";
+
+#if !HAVE_DECL_CRYPTO_THREAD_ENABLED
+static int CRYPTO_THREAD_enabled(OSSL_LIB_CTX *ctx) { return 0; }
+static int CRYPTO_THREAD_enable(OSSL_LIB_CTX *ctx, int max_threads) { return 0; }
+#endif
+
 #endif
 
 #define CONST_CAST(x) (x)(uintptr_t)
@@ -179,11 +185,14 @@ static int openssl_backend_init(bool fips)
 		ossl_legacy = OSSL_PROVIDER_try_load(ossl_ctx, "legacy", 0);
 	}
 
-	r = snprintf(backend_version, sizeof(backend_version), "%s %s%s%s",
+	CRYPTO_THREAD_enable(ossl_ctx, -1);
+
+	r = snprintf(backend_version, sizeof(backend_version), "%s%s%s%s%s",
 		OpenSSL_version(OPENSSL_VERSION),
 		ossl_default ? "[default]" : "",
 		ossl_legacy  ? "[legacy]" : "",
-		fips  ? "[fips]" : "");
+		fips  ? "[fips]" : "",
+		CRYPTO_THREAD_enabled(ossl_ctx) ? "[threads]" : "");
 
 	if (r < 0 || (size_t)r >= sizeof(backend_version)) {
 		openssl_backend_exit();
@@ -583,8 +592,53 @@ static int openssl_argon2(const char *type, const char *password, size_t passwor
 	const char *salt, size_t salt_length, char *key, size_t key_length,
 	uint32_t iterations, uint32_t memory, uint32_t parallel)
 {
+#if HAVE_DECL_OSSL_KDF_PARAM_ARGON2_VERSION
+	EVP_KDF_CTX *ctx;
+	EVP_KDF *argon2;
+	unsigned int threads = parallel;
+	int r;
+	OSSL_PARAM params[] = {
+		OSSL_PARAM_octet_string(OSSL_KDF_PARAM_PASSWORD,
+			CONST_CAST(void*)password, password_length),
+		OSSL_PARAM_octet_string(OSSL_KDF_PARAM_SALT,
+			CONST_CAST(void*)salt, salt_length),
+		OSSL_PARAM_uint32(OSSL_KDF_PARAM_ITER, &iterations),
+		OSSL_PARAM_uint(OSSL_KDF_PARAM_THREADS, &threads),
+		OSSL_PARAM_uint32(OSSL_KDF_PARAM_ARGON2_LANES, &parallel),
+		OSSL_PARAM_uint32(OSSL_KDF_PARAM_ARGON2_MEMCOST, &memory),
+		OSSL_PARAM_END
+	};
+
+	if (CRYPTO_THREAD_enabled(ossl_ctx) != 1)
+		threads = 1;
+
+	argon2 = EVP_KDF_fetch(ossl_ctx, type, NULL);
+	if (!argon2)
+		return -EINVAL;
+
+	ctx = EVP_KDF_CTX_new(argon2);
+	if (!ctx) {
+		EVP_KDF_free(argon2);
+		return -EINVAL;;
+	}
+
+	if (EVP_KDF_CTX_set_params(ctx, params) != 1) {
+		EVP_KDF_CTX_free(ctx);
+		EVP_KDF_free(argon2);
+		return -EINVAL;
+	}
+
+	r = EVP_KDF_derive(ctx, (unsigned char*)key, key_length, NULL /*params*/);
+
+	EVP_KDF_CTX_free(ctx);
+	EVP_KDF_free(argon2);
+
+	/* _derive() returns 0 or negative value on error, 1 on success */
+	return r == 1 ? 0 : -EINVAL;
+#else
 	return argon2(type, password, password_length, salt, salt_length,
 		      key, key_length, iterations, memory, parallel);
+#endif
 }
 
 /* PBKDF */
