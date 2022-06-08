@@ -300,8 +300,8 @@ static int reenc_keyslot_validate(struct crypt_device *cd, json_object *jobj_key
 		return -EINVAL;
 
 	jobj_key_size = json_contains(cd, jobj_keyslot, "", "reencrypt keyslot", "key_size", json_type_int);
-	jobj_mode = json_contains(cd, jobj_keyslot, "", "reencrypt keyslot", "mode", json_type_string);
-	jobj_direction = json_contains(cd, jobj_keyslot, "", "reencrypt keyslot", "direction", json_type_string);
+	jobj_mode = json_contains_string(cd, jobj_keyslot, "", "reencrypt keyslot", "mode");
+	jobj_direction = json_contains_string(cd, jobj_keyslot, "", "reencrypt keyslot", "direction");
 
 	if (!jobj_mode || !jobj_direction || !jobj_key_size)
 		return -EINVAL;
@@ -327,7 +327,7 @@ static int reenc_keyslot_validate(struct crypt_device *cd, json_object *jobj_key
 	}
 
 	if (!strcmp(type, "checksum")) {
-		jobj_hash = json_contains(cd, jobj_area, "type:checksum", "Keyslot area", "hash", json_type_string);
+		jobj_hash = json_contains_string(cd, jobj_area, "type:checksum", "Keyslot area", "hash");
 		jobj_sector_size = json_contains(cd, jobj_area, "type:checksum", "Keyslot area", "sector_size", json_type_int);
 		if (!jobj_hash || !jobj_sector_size)
 			return -EINVAL;
@@ -339,7 +339,7 @@ static int reenc_keyslot_validate(struct crypt_device *cd, json_object *jobj_key
 			return -EINVAL;
 		}
 	} else if (!strcmp(type, "datashift")) {
-		if (!(jobj_shift_size = json_contains(cd, jobj_area, "type:datashift", "Keyslot area", "shift_size", json_type_string)))
+		if (!(jobj_shift_size = json_contains_string(cd, jobj_area, "type:datashift", "Keyslot area", "shift_size")))
 			return -EINVAL;
 
 		shift_size = crypt_jobj_get_uint64(jobj_shift_size);
