@@ -3949,6 +3949,7 @@ static int _create_device_with_integrity(struct crypt_device *cd,
 	enum devcheck device_check;
 	struct dm_target *tgt;
 	struct device *device = NULL;
+	char name_pd[200] = {0};
 
 	if (!single_segment(dmd))
 		return -EINVAL;
@@ -3970,12 +3971,21 @@ static int _create_device_with_integrity(struct crypt_device *cd,
 
 	r = device_block_adjust(cd, tgt->data_device, device_check,
 				tgt->u.crypt.offset, &dmd->size, &dmd->flags);
-
-	if (!r)
-		r = dm_create_device(cd, name, type, dmd);
-out:
 	if (r < 0)
+		goto out;
+
+	r = dm_create_device(cd, name, type, dmd);
+	if (r < 0)
+		goto out;
+
+	sprintf(name_pd, "%s_pd", name);
+
+        r = dm_create_device(cd, name_pd, type, dmd);
+out:
+	if (r < 0) {
 		dm_remove_device(cd, iname, 0);
+		dm_remove_device(cd,name, 0);
+	}
 
 	device_free(cd, device);
 	return r;
