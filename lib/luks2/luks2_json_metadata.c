@@ -2577,6 +2577,14 @@ int LUKS2_deactivate(struct crypt_device *cd, const char *name, struct luks2_hdr
 	}
 	dm_targets_free(cd, &dmdc);
 
+	/* remove the PD device */
+	// TODO: error handling
+	{
+		char name_pd[200] = {0};
+		sprintf(name_pd, "%s_pd", name);
+		dm_remove_device(cd, name_pd, flags);
+	}
+
 	/* TODO: We have LUKS2 dependencies now */
 	if (r >= 0 && namei) {
 		log_dbg(cd, "Deactivating integrity device %s.", namei);
