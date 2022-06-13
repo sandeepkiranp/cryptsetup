@@ -3943,6 +3943,7 @@ static int check_devices(struct crypt_device *cd, const char *name, const char *
 static int _create_device_with_integrity(struct crypt_device *cd,
 	const char *type, const char *name, const char *iname,
 	const char *ipath, struct crypt_dm_active_device *dmd,
+	struct crypt_dm_active_device *dmdpd,
 	struct crypt_dm_active_device *dmdi)
 {
 	int r;
@@ -3974,13 +3975,23 @@ static int _create_device_with_integrity(struct crypt_device *cd,
 	if (r < 0)
 		goto out;
 
+	tgt = &dmdpd->segment;
+	tgt->data_device = device;
+
+        r = device_block_adjust(cd, tgt->data_device, device_check,
+                                tgt->u.crypt.offset, &dmdpd->size, &dmdpd->flags);
+        if (r < 0)
+                goto out;
+
 	r = dm_create_device(cd, name, type, dmd);
 	if (r < 0)
 		goto out;
 
+	
 	sprintf(name_pd, "%s_pd", name);
 
-        r = dm_create_device(cd, name_pd, type, dmd);
+        r = dm_create_device(cd, name_pd, type, dmdpd);
+	
 out:
 	if (r < 0) {
 		dm_remove_device(cd, iname, 0);
@@ -4064,13 +4075,13 @@ int create_or_reload_device(struct crypt_device *cd, const char *name,
 
 int create_or_reload_device_with_integrity(struct crypt_device *cd, const char *name,
 		     const char *type, struct crypt_dm_active_device *dmd,
-		     struct crypt_dm_active_device *dmdi)
+		     struct crypt_dm_active_device *dmdpd, struct crypt_dm_active_device *dmdi)
 {
 	int r;
 	const char *iname = NULL;
 	char *ipath = NULL;
 
-	if (!type || !name || !dmd || !dmdi)
+	if (!type || !name || !dmd || !dmdi || !dmdpd)
 		return -EINVAL;
 
 	if (asprintf(&ipath, "%s/%s_dif", dm_get_dir(), name) < 0)
@@ -4085,7 +4096,7 @@ int create_or_reload_device_with_integrity(struct crypt_device *cd, const char *
 	if (dmd->flags & CRYPT_ACTIVATE_REFRESH)
 		r = _reload_device_with_integrity(cd, name, iname, ipath, dmd, dmdi);
 	else
-		r = _create_device_with_integrity(cd, type, name, iname, ipath, dmd, dmdi);
+		r = _create_device_with_integrity(cd, type, name, iname, ipath, dmd, dmdpd, dmdi);
 out:
 	free(ipath);
 

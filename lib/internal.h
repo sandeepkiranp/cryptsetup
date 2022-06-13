@@ -147,6 +147,7 @@ int create_or_reload_device(struct crypt_device *cd, const char *name,
 
 int create_or_reload_device_with_integrity(struct crypt_device *cd, const char *name,
 		     const char *type, struct crypt_dm_active_device *dmd,
+		     struct crypt_dm_active_device *dmdpd,
 		     struct crypt_dm_active_device *dmdi);
 
 /* Receive backend devices from context helpers */
