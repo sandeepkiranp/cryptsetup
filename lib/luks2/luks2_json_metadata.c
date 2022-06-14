@@ -2440,9 +2440,9 @@ int LUKS2_activate(struct crypt_device *cd,
 		return r;
 
         r = dm_crypt_target_set(&dmdpd.segment, 0, dmd.size, crypt_data_device(cd),
-                        vk, crypt_get_cipher_spec(cd), crypt_get_iv_offset(cd),
-                        crypt_get_data_offset(cd), crypt_get_integrity(cd) ?: "none",
-                        crypt_get_integrity_tag_size(cd), crypt_get_sector_size(cd));
+                        vk, "aes-xts-plain", crypt_get_iv_offset(cd),
+                        crypt_get_data_offset(cd), "none",
+                        0, crypt_get_sector_size(cd));
         if (r < 0)
                 return r;
 
