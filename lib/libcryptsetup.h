@@ -1182,6 +1182,8 @@ int crypt_keyslot_destroy(struct crypt_device *cd, int keyslot);
 #define CRYPT_ACTIVATE_NO_WRITE_WORKQUEUE (UINT32_C(1) << 25)
 /** dm-integrity: reset automatic recalculation */
 #define CRYPT_ACTIVATE_RECALCULATE_RESET (UINT32_C(1) << 26)
+/** dm-crypt: use integrity metadata for storing data */
+#define CRYPT_ACTIVATE_STORE_DATA_IN_INTEGRITY_MD (UINT32_C(1) << 27)
 
 /**
  * Active device runtime attributes

@@ -2472,6 +2472,8 @@ int LUKS2_activate(struct crypt_device *cd,
 		dmdi.uuid = dmd.uuid;
 		dmd.segment.u.crypt.offset = 0;
 		dmd.segment.size = dmdi.segment.size;
+
+		dmdpd.flags |= CRYPT_ACTIVATE_STORE_DATA_IN_INTEGRITY_MD;
 		dmdpd.segment.u.crypt.offset = 0;
 		dmdpd.segment.size = (dmdi.segment.size * dmdi.segment.u.integrity.tag_size)/dmdi.segment.u.integrity.sector_size;
 		dmdpd.segment.size *= dmdi.segment.u.integrity.sector_size/SECTOR_SIZE;

@@ -643,19 +643,22 @@ static char *get_dm_crypt_params(const struct dm_target *tgt, uint32_t flags)
 		num_options++;
 	if (flags & CRYPT_ACTIVATE_IV_LARGE_SECTORS)
 		num_options++;
+	if (flags & CRYPT_ACTIVATE_STORE_DATA_IN_INTEGRITY_MD)
+		num_options++;
 	if (tgt->u.crypt.integrity)
 		num_options++;
 	if (tgt->u.crypt.sector_size != SECTOR_SIZE)
 		num_options++;
 
 	if (num_options) { /* MAX length  int32 + 15 + 15 + 23 + 18 + 19 + 17 + 13 + int32 + integrity_str */
-		r = snprintf(features, sizeof(features), " %d%s%s%s%s%s%s%s%s", num_options,
+		r = snprintf(features, sizeof(features), " %d%s%s%s%s%s%s%s%s%s", num_options,
 		(flags & CRYPT_ACTIVATE_ALLOW_DISCARDS) ? " allow_discards" : "",
 		(flags & CRYPT_ACTIVATE_SAME_CPU_CRYPT) ? " same_cpu_crypt" : "",
 		(flags & CRYPT_ACTIVATE_SUBMIT_FROM_CRYPT_CPUS) ? " submit_from_crypt_cpus" : "",
 		(flags & CRYPT_ACTIVATE_NO_READ_WORKQUEUE) ? " no_read_workqueue" : "",
 		(flags & CRYPT_ACTIVATE_NO_WRITE_WORKQUEUE) ? " no_write_workqueue" : "",
 		(flags & CRYPT_ACTIVATE_IV_LARGE_SECTORS) ? " iv_large_sectors" : "",
+		(flags & CRYPT_ACTIVATE_STORE_DATA_IN_INTEGRITY_MD) ? " store_data_in_integrity_md" : "",
 		(tgt->u.crypt.sector_size != SECTOR_SIZE) ?
 			_uf(sector_feature, sizeof(sector_feature), "sector_size", tgt->u.crypt.sector_size) : "",
 		integrity_dm);
