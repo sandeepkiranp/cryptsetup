@@ -658,7 +658,7 @@ static char *get_dm_crypt_params(const struct dm_target *tgt, uint32_t flags)
 		(flags & CRYPT_ACTIVATE_NO_READ_WORKQUEUE) ? " no_read_workqueue" : "",
 		(flags & CRYPT_ACTIVATE_NO_WRITE_WORKQUEUE) ? " no_write_workqueue" : "",
 		(flags & CRYPT_ACTIVATE_IV_LARGE_SECTORS) ? " iv_large_sectors" : "",
-		(flags & CRYPT_ACTIVATE_STORE_DATA_IN_INTEGRITY_MD) ? " store_data_in_integrity_md" : "",
+		(flags & CRYPT_ACTIVATE_STORE_DATA_IN_INTEGRITY_MD) ? " store_data_in_integrity_md:16" : "", //TODO: remove hard coded tag_size=16
 		(tgt->u.crypt.sector_size != SECTOR_SIZE) ?
 			_uf(sector_feature, sizeof(sector_feature), "sector_size", tgt->u.crypt.sector_size) : "",
 		integrity_dm);
