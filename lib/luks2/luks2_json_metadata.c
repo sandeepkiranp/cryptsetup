@@ -2475,9 +2475,9 @@ int LUKS2_activate(struct crypt_device *cd,
 
 		dmdpd.flags |= CRYPT_ACTIVATE_STORE_DATA_IN_INTEGRITY_MD;
 		dmdpd.segment.u.crypt.offset = 0;
-		dmdpd.segment.size = (dmdi.segment.size * dmdi.segment.u.integrity.tag_size)/dmdi.segment.u.integrity.sector_size;
+		dmdpd.segment.size = (dmdi.segment.size * dmdi.segment.u.integrity.tag_size)/dmdi.segment.u.integrity.sector_size - 10;
 		dmdpd.segment.size *= dmdi.segment.u.integrity.sector_size/SECTOR_SIZE; 
-		//TODO: have space for the last sector (32*last_sector -1) may go beyond available sectors
+		//TODO: remove the hard-coded 10
 
 		r = create_or_reload_device_with_integrity(cd, name, CRYPT_LUKS2, &dmd, &dmdpd, &dmdi);
 	} else
