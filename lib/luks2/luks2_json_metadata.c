@@ -27,6 +27,7 @@
 #include <uuid/uuid.h>
 
 #define LUKS_STRIPES 4000
+#define HIDDEN_BYTES_PER_TAG 12
 
 struct interval {
 	uint64_t offset;
@@ -2427,6 +2428,7 @@ int LUKS2_activate(struct crypt_device *cd,
 	}, dmdpd = {
                 .uuid   = crypt_get_uuid(cd)
         };
+	unsigned int num_sectors = (SECTOR_SIZE % HIDDEN_BYTES_PER_TAG) ? (SECTOR_SIZE / HIDDEN_BYTES_PER_TAG) + 1: (SECTOR_SIZE / HIDDEN_BYTES_PER_TAG);
 
 	/* do not allow activation when particular requirements detected */
 	if ((r = LUKS2_unmet_requirements(cd, hdr, 0, 0)))
@@ -2475,8 +2477,7 @@ int LUKS2_activate(struct crypt_device *cd,
 
 		dmdpd.flags |= CRYPT_ACTIVATE_STORE_DATA_IN_INTEGRITY_MD;
 		dmdpd.segment.u.crypt.offset = 0;
-		dmdpd.segment.size = (dmdi.segment.size * dmdi.segment.u.integrity.tag_size)/dmdi.segment.u.integrity.sector_size - 10;
-		dmdpd.segment.size *= dmdi.segment.u.integrity.sector_size/SECTOR_SIZE; 
+		dmdpd.segment.size = (dmdi.segment.size)/num_sectors;
 		//TODO: remove the hard-coded 10
 
 		r = create_or_reload_device_with_integrity(cd, name, CRYPT_LUKS2, &dmd, &dmdpd, &dmdi);
