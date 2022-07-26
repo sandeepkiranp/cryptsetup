@@ -27,7 +27,7 @@
 #include <uuid/uuid.h>
 
 #define LUKS_STRIPES 4000
-#define HIDDEN_BYTES_PER_TAG 12
+#define HIDDEN_BYTES_PER_TAG 14
 
 struct interval {
 	uint64_t offset;
